@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>高级技术实施与全栈运维作品集</title>
     <style>
         :root {
@@ -17,6 +17,10 @@
             --hover-bg: #f1f5f9;
         }
 
+        * {
+            box-sizing: border-box; /* 确保所有元素的边距不会撑破宽度 */
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             line-height: 1.65;
@@ -27,25 +31,28 @@
             overflow-x: hidden;
         }
 
-        /* A4 纸张模拟排版 */
-        .document-container { max-width: 210mm; margin: 0 auto; }
-        .page { background: #ffffff; min-height: 297mm; margin-bottom: 25px; padding: 25mm 20mm; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); border-radius: 4px; box-sizing: border-box; position: relative; }
+        /* 基础容器：自适应宽度 */
+        .document-container {
+            max-width: 210mm;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 15px; /* 两侧留白，防止手机贴边 */
+        }
 
-        /* 🖨️ 打印优化 */
-        @media print {
-            body { background: none; padding: 0; margin: 0; }
-            .document-container { max-width: none; }
-            .page { box-shadow: none; margin: 0; border-radius: 0; padding: 15mm 20mm; page-break-after: always; }
-            .no-print { display: none !important; }
-            table, pre, figure, .summary-box, .project-image-grid { page-break-inside: avoid; break-inside: avoid; }
-            h2, h3 { page-break-after: avoid; break-after: avoid; }
+        .page {
+            background: #ffffff;
+            min-height: 297mm;
+            margin-bottom: 25px;
+            padding: 40px 50px; /* 电脑端边距 */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: relative;
         }
 
         header { border-bottom: 3px solid var(--primary-color); padding-bottom: 15px; margin-bottom: 25px; position: relative; }
         header h1 { color: var(--primary-color); font-size: 26px; margin: 0 0 8px 0; letter-spacing: 0.5px; }
         .subtitle { font-size: 14px; color: var(--dark-neutral); font-weight: 600; margin-bottom: 12px; }
 
-        /* GitHub 徽章 */
         .github-badge {
             display: inline-flex; align-items: center; gap: 8px; background-color: #24292e; color: #ffffff;
             padding: 6px 16px; border-radius: 50px; text-decoration: none; font-size: 13px; font-weight: 600;
@@ -61,7 +68,16 @@
         h3.sub-title { color: var(--primary-color); border-left: 4px solid var(--secondary-color); padding-left: 10px; font-size: 15px; margin: 25px 0 12px 0; font-weight: bold; }
         p { font-size: 14px; margin: 0 0 12px 0; text-align: justify; }
 
-        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        /* 表格响应式容器 */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 15px 0;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 13px; }
         th, td { border: 1px solid var(--border-color); padding: 12px 14px; text-align: left; vertical-align: top; }
         th { background-color: var(--bg-light); color: var(--dark-neutral); font-weight: 700; }
         tr:nth-child(even) { background-color: #fafbfc; }
@@ -73,7 +89,7 @@
         code { font-family: "Consolas", monospace; background-color: #f1f5f9; color: #be123c; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600; }
         pre code { background-color: transparent; color: inherit; padding: 0; font-weight: normal; }
 
-        figure.image-container { border: 2px dashed #94a3b8; background-color: #f8fafc; border-radius: 8px; margin: 20px 0; padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; }
+        figure.image-container { border: 2px dashed #94a3b8; background-color: #f8fafc; border-radius: 8px; margin: 20px 0; padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .project-image-grid { display: flex; gap: 15px; margin: 20px 0; }
         .image-item { flex: 1; margin: 0; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; background: #ffffff; display: flex; flex-direction: column; align-items: center; }
 
@@ -84,32 +100,65 @@
         .print-btn { position: fixed; bottom: 30px; right: 30px; background-color: var(--primary-color); color: white; border: none; padding: 12px 24px; border-radius: 50px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4); z-index: 1000; }
         .print-btn:hover { background-color: var(--secondary-color); transform: translateY(-2px); }
 
-        /* ⬇️ 全新极客级高级画廊遮罩层样式 ⬇️ */
         #lightbox {
             display: none; position: fixed; z-index: 99999; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(10, 15, 25, 0.95); backdrop-filter: blur(5px);
             align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
-            user-select: none; /* 防止拖拽时选中文字 */
-            overflow: hidden;
+            user-select: none; overflow: hidden;
         }
         #lightbox.show { display: flex; opacity: 1; }
-
         #lightbox-img {
-            max-width: 85vw; max-height: 85vh; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            cursor: grab; /* 提示可拖拽的小手 */
-            transition: transform 0.1s ease-out; /* 让滚轮缩放更丝滑 */
-            will-change: transform;
+            max-width: 95vw; max-height: 85vh; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            cursor: grab; transition: transform 0.1s ease-out; will-change: transform;
         }
-        #lightbox-img:active { cursor: grabbing; /* 按下时变成抓取状态 */ transition: none; /* 拖拽时取消过渡，防止延迟卡顿 */ }
-
+        #lightbox-img:active { cursor: grabbing; transition: none; }
         #lightbox-close { position: absolute; top: 25px; right: 35px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 100000; transition: color 0.2s; }
-        #lightbox-close:hover { color: #ef4444; }
-
         #lightbox-hint {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             color: rgba(255, 255, 255, 0.6); font-size: 13.5px; letter-spacing: 1px;
             background: rgba(0, 0, 0, 0.5); padding: 8px 20px; border-radius: 30px;
-            pointer-events: none; z-index: 100000;
+            pointer-events: none; z-index: 100000; text-align: center; width: 90%;
+        }
+
+        /* 📱 移动端自适应核心代码 (屏幕宽度小于 768px 时触发) */
+        @media (max-width: 768px) {
+            body { padding: 10px 0; }
+            .document-container { padding: 0 10px; }
+            .page {
+                padding: 20px 15px; /* 缩小手机端内边距 */
+                min-height: auto;   /* 取消最低高度限制 */
+                margin-bottom: 15px;
+            }
+
+            header h1 { font-size: 22px; }
+            .subtitle { font-size: 13px; line-height: 1.5; }
+            .tech-tags { gap: 6px; }
+            .tag { padding: 3px 10px; font-size: 11px; }
+
+            h2.section-title { font-size: 15px; padding: 8px 12px; margin: 25px 0 15px 0; }
+            h3.sub-title { font-size: 14px; margin: 18px 0 10px 0; }
+            p, li { font-size: 13px; }
+
+            /* 图片排列由左右变上下 */
+            .project-image-grid { flex-direction: column; gap: 15px; }
+            .zoomable-img { max-height: 220px; }
+
+            /* 悬浮按钮和遮罩层字体缩小 */
+            .print-btn { bottom: 15px; right: 15px; padding: 10px 18px; font-size: 13px; }
+            #lightbox-close { top: 15px; right: 20px; font-size: 35px; }
+            #lightbox-hint { font-size: 11px; padding: 6px 15px; bottom: 20px; }
+        }
+
+        /* 🖨️ 打印优化 */
+        @media print {
+            body { background: none; padding: 0; margin: 0; }
+            .document-container { max-width: none; padding: 0; }
+            .page { box-shadow: none; margin: 0; border-radius: 0; padding: 15mm 20mm; page-break-after: always; min-height: 297mm; }
+            .no-print { display: none !important; }
+            .table-responsive { overflow: visible; box-shadow: none; }
+            table { min-width: auto; }
+            table, pre, figure, .project-image-grid { page-break-inside: avoid; break-inside: avoid; }
+            h2, h3 { page-break-after: avoid; break-after: avoid; }
         }
     </style>
 </head>
@@ -119,7 +168,7 @@
 
 <div id="lightbox" class="no-print">
     <span id="lightbox-close" onclick="closeLightbox()" title="关闭 (ESC)">&times;</span>
-    <div id="lightbox-hint">💡 提示：滚动鼠标滚轮放大/缩小，按住图片可自由拖拽</div>
+    <div id="lightbox-hint">💡 提示：双指捏合缩放，按住图片可自由拖拽</div>
     <img id="lightbox-img" src="" alt="详细大图">
 </div>
 
@@ -127,7 +176,7 @@
     <article class="page">
         <header>
             <h1>技术交付与全栈实施工程作品集</h1>
-            <div class="subtitle">技术锚点：底层协议抓包诊断 / 系统架构与容灾 / Web应用部署 / 业务流敏捷交付</div>
+            <div class="subtitle">技术锚点：底层协议抓包诊断 / 系统架构与容灾 / 自动化交付脚本 / 园区网络高可用</div>
 
             <a href="https://github.com/xingjianlu573-dot/technical-implementation-stack" target="_blank" class="github-badge no-print">
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
@@ -135,12 +184,12 @@
             </a>
 
             <div class="tech-tags">
-                <span class="tag">Linux / LNMP</span>
-                <span class="tag">跨环境数据灾备与重构</span>
-                <span class="tag">Nginx 反向代理与伪静态</span>
-                <span class="tag">eNSP 园区网架构</span>
-                <span class="tag">Wireshark 协议分析</span>
-                <span class="tag">Lark Base 数字化交付</span>
+                <span class="tag">Linux / Shell 自动化</span>
+                <span class="tag">高级无损动态扩容</span>
+                <span class="tag">Nginx 伪静态与死循环解耦</span>
+                <span class="tag">VRRP 协议加固防火墙</span>
+                <span class="tag">Wireshark 底层断代排障</span>
+                <span class="tag">飞书多维多表建模交付</span>
             </div>
         </header>
 
@@ -150,7 +199,7 @@
 
         <h3 class="sub-title">1.2 F12 状态码判别与伪静态（URL Rewrite）策略固化</h3>
         <p>在系统通过 Cpolar 穿透发布至公网初期，遭遇用户点击子页面全站抛出 <code>HTTP 404 Not Found</code> 拦截的故障。</p>
-        <p><b>诊断与破局：</b>拒绝盲目重启服务，规范调出浏览器 F12 开发者工具网络面板。观察到静态图片稳定返回 <code>HTTP 304</code>（代表缓存未改变，成功调用），精准排除了静态资源缺失问题。判定症结在 Nginx 层动态路由解析失效。深入 Nginx 配置文件固化伪静态路由重写逻辑，强制重定向至前端总入口：</p>
+        <p><b>诊断与破局：</b>拒绝盲目重启服务，规范调出浏览器 F12 开发者工具网络面板。观察到静态图片稳定返回 <code>HTTP 304</code>（代表缓存未改变，成功直接调用），精准排除了静态资源缺失问题。判定症结在 Nginx 层动态路由解析失效。深入 Nginx 配置文件固化伪静态路由重写逻辑，强制重定向至前端总入口：</p>
         <pre><code>location / {
     # 核心修复：固化伪静态路由重写规则，终结 404 幽灵
     try_files $uri $uri/ /index.php?$args;
@@ -167,11 +216,11 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROT
         <div class="project-image-grid">
             <figure class="image-item">
                 <img class="zoomable-img" src="images/bt-panel.jpg" alt="宝塔Linux面板状态监控" onclick="openLightbox(this)">
-                <figcaption>① 宝塔面板：系统负载流畅，根分区已无损扩容至 30G 状态监测</figcaption>
+                <figcaption>① 宝塔面板：系统负载流畅，环境物理指标状态监测</figcaption>
             </figure>
             <figure class="image-item">
                 <img class="zoomable-img" src="images/cpolar-tunnel.jpg" alt="Cpolar公网穿透状态" onclick="openLightbox(this)">
-                <figcaption>② Cpolar：内网穿透公网安全隧道运行快照（18040端口映射）</figcaption>
+                <figcaption>② Cpolar：内网穿透公网隧道运行快照</figcaption>
             </figure>
         </div>
     </article>
@@ -184,96 +233,130 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROT
         <h3 class="sub-title">2.2 生产级全量灾备与低峰期滚动淘汰标准作业（SOP）</h3>
         <p>建立标准化的底层容灾备份机制。避开白天业务高峰期产生的 I/O 阻塞压力，配置自动化计划任务（Cron Job），锁定在每日凌晨 <b>01:30</b>（业务访问量最低谷）自动执行 <code>mysqldump</code> 全量数据抽离，并采取<b>滚动保留 7 份（一周循环淘汰）</b>的精细化灾备策略，筑牢数据安全底线。</p>
 
-        <h3 class="sub-title">2.3 Linux 生产环境磁盘无损扩容与极端演练</h3>
-        <p>为模拟业务暴增导致系统盘告警场景，摒弃破坏性删除分区的危险旧法，直接在 CLI 字符界面调用标准工具链进行秒级在线无损扩容，确保护航业务零中断：</p>
-        <pre><code># 1. 在线动态重塑磁盘物理分区边界（不破坏现有数据资产）
+        <h3 class="sub-title">2.3 Linux 生产环境磁盘 20G 至 30G 在线无损扩容演练</h3>
+        <p>为模拟业务数据暴增导致系统盘空间告警（20G 极限）的极端场景，摒弃破坏性删除分区的危险旧法，直接在 CLI 命令行界面调用标准工具链进行秒级在线无损扩容，护航业务零中断：</p>
+        <pre><code># 1. 在线动态重塑磁盘物理分区边界（容量由20G拉伸至30G）
 growpart /dev/sda 2
 
-# 2. 精准拉伸延伸 Ext4 文件系统，使其立即满额生效
-resize2fs /dev/sda2</code></pre>
-        <p>系统重构后，通过逆向编辑 <code>wp-config.php</code> 快速完成数据库鉴权凭证的精准对齐，并演练极端场景下的管理员密码哈希重置应急修复。</p>
+# 2. 精准拉伸延伸 Ext4 文件系统，使其立即额满生效
+resize2fs /dev/sda2
+
+# 💡 若底层为 XFS 文件系统，则选用：xfs_growfs /</code></pre>
+        <p>系统重构后，通过逆向编辑 <code>wp-config.php</code> 快速完成数据库鉴权凭证的精准对齐，并成功演练极端场景下的管理员密码 md5 哈希重置应急修复。</p>
 
         <figure class="image-container">
             <img class="zoomable-img" src="images/disk-growpart.png" alt="Linux扩容验证或数据库迁移备份" onclick="openLightbox(this)">
-            <figcaption>Linux 底层命令行：验证文件系统与分区无损扩容，或数据库定时安全备份脚本</figcaption>
+            <figcaption>Linux 底层命令行：验证文件系统与分区无损扩容跨越</figcaption>
         </figure>
     </article>
 
     <article class="page">
         <h2 class="section-title">项目三：企业级园区网络架构规划与底层通信协议诊断</h2>
-        <h3 class="sub-title">3.1 项目背景与园区网拓扑规划</h3>
-        <p>独立设计标准企业园区局域网方案。通过严谨的三层网络架构设计确保高可用性与安全隔离：</p>
+        <h3 class="sub-title">3.1 简单、全面的骨干数通拓扑规划</h3>
+        <p>设计标准企业园区局域网方案。通过三层核心数通网络架构设计，在保持高可用大框架的基础上，全面灌注底层协议防御策略：</p>
         <ul>
-            <li><b>安全隔离与防环：</b> 精准划分独立 DMZ 服务器安全区与办公网 VLAN，二层网络配置 MSTP 与 VRRP 彻底消除环路并实现网关热备。</li>
-            <li><b>动态路由收敛：</b> 在核心层全网激活 <b>OSPF 动态路由协议</b>，实现多区域路由信息的秒级学习。</li>
-            <li><b>边界安全与 NAT：</b> 出口防火墙配置 NAT 地址转换，并挂载 ACL 锁死非法网段流量入站。</li>
+            <li><b>安全隔离规划：</b> 精准划分 <code>VLAN 10</code> 办公网段与 <code>VLAN 20</code> 独立 DMZ 服务器安全区，在核心层全网激活 <b>OSPF Area 0</b> 动态路由骨干区域，实现路由秒级学习。</li>
+            <li><b>VRRP网关防脑裂加固：</b> 二层网络配置 MSTP 与 VRRP 消除环路并实现热备。针对系统级物理防火墙，<b>绝对放行 VRRP 协议（IP 协议号 112）</b>，彻底阻断由于防火墙误杀心跳包引发的“双 master 脑裂”毁灭性灾难。</li>
+            <li><b>高级 NAT 豁免技术：</b> 出口防火墙配置 NAT 转换。针对跨区域 IPsec VPN 私网互访流量，部署 <b>NAT 豁免（NAT Exemption）</b> 策略，避免私网报文被出口 NAT 策略劫持误杀，打通安全的通信黑洞。</li>
         </ul>
 
         <h3 class="sub-title">3.2 eNSP 网络仿真拓扑全景</h3>
         <figure class="image-container">
             <img class="zoomable-img" src="images/ensp-topology.jpg" alt="企业级三层网络架构拓扑图" onclick="openLightbox(this)">
-            <figcaption>基于 eNSP 构建的包含双核心高可用、防火墙边界及独立 DMZ 区域的园区骨干网</figcaption>
+            <figcaption>基于 eNSP 构建的园区骨干网高可用网络拓扑</figcaption>
         </figure>
 
         <h3 class="sub-title">3.3 Wireshark 协议层断代与深度排障实战</h3>
         <p>在实施现场遭遇复杂故障时，直接利用 Wireshark 进行底层协议抓包自证，用数据流精准定责：</p>
         <ul>
-            <li><b>DHCP 交互精准诊断：</b> 深度抓取并还原 DHCP 动态地址分配的完整 <b>DORA 交互过程</b>（<code>Discover ➡️ Offer ➡️ Request ➡️ Acknowledge</code>）或<b>状态机快速双向续约</b>过程。</li>
-            <li>通过分析 BootP 报文中的 <code>Transaction ID</code> 暗号与 <code>Client MAC</code>，快速断代解决现场局域网断网、流氓 DHCP 抢答及恶性 IP 冲突故障。</li>
+            <li><b>DHCP DORA 状态机过滤：</b> 深度抓取并还原 DHCP 动态地址分配的完整 <b>DORA 四阶段交互报文</b>（<code>Discover ➡️ Offer ➡️ Request ➡️ Acknowledge</code>）。</li>
+            <li><b>暗号对齐与定责：</b> 通过分析 BootP 报文中的 <b>Transaction ID（事务ID）</b> 暗号、<code>Client MAC</code> 硬件标识以及 <code>Option 54</code>（DHCP 服务器标识符），快速掐灭局域网流氓 DHCP 抢答、流氓路由劫持以及恶性 IP 冲突故障。</li>
         </ul>
 
         <h3 class="sub-title">3.4 底层协议抓包分析实况验证</h3>
         <figure class="image-container">
             <img class="zoomable-img" src="images/wireshark-dora.png" alt="Wireshark DHCP 报文深度抓包分析" onclick="openLightbox(this)">
-            <figcaption>利用 Wireshark 过滤器精准捕获网卡协议交互报文，逆向验证 DHCP 状态机通信握手机制</figcaption>
+            <figcaption>利用 Wireshark 过滤器精准捕获协议交互报文逆向验证</figcaption>
         </figure>
     </article>
 
     <article class="page">
-        <h2 class="section-title">项目四：现代化数字化管理系统与业务 CRM 轻量级敏捷交付</h2>
-        <h3 class="sub-title">4.1 业务痛点背景与低代码敏捷选型</h3>
+        <h2 class="section-title">项目四：自研自动化运维脚本资产（Scripts Toolchain）</h2>
+        <h3 class="sub-title">4.1 核心自动化工程资产概述</h3>
+        <p>为彻底拒绝“刀耕火种”式的重复人工部署，将实操经验固化为全自动脚本链，实现生产环境“1 次运行与 100 次运行状态绝对一致”的<b>全幂等性硬化</b>控制：</p>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width: 25%;">脚本资产名称</th>
+                    <th style="width: 25%;">核心底层技术</th>
+                    <th style="width: 50%;">生产环境交付价值</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><code>offline_deploy.sh</code><br>(离线自动化部署脚本)</td>
+                    <td>环境自检 / 系统提权 / 依赖全压制 / 自动配置注入</td>
+                    <td>在完全断网隔离的客户内网生产环境中，一键秒级初始化 LNMP 拓扑环境，杜绝人工配置引入的拼写故障。</td>
+                </tr>
+                <tr>
+                    <td><code>system_audit.sh</code><br>(系统级深度审计脚本)</td>
+                    <td>端口监听扫描 / 磁盘阈值报警 / 核心进程守护</td>
+                    <td>巡检自动化。自动提取磁盘、服务、防火墙状态并输出标准审计报告，先于用户发现系统隐患。</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <article class="page">
+        <h2 class="section-title">项目五：现代化数字化管理系统与业务 CRM 轻量级敏捷交付</h2>
+        <h3 class="sub-title">5.1 业务痛点背景与低代码敏捷选型</h3>
         <p>针对企业 CRM 业务定制开发周期长、多维数据割裂的痛点，选用现代化数字化平台——飞书多维表格（Lark Base），敏捷交付具备<b>【底层数据骨架 + 自动化流引擎编排 + 实时可视化 BI 看板】</b>的高效业务系统。</p>
 
-        <h3 class="sub-title">4.2 多维数据库建模与自动化流引擎配置</h3>
+        <h3 class="sub-title">5.2 多维数据库建模与自动化流引擎配置</h3>
         <p>设计非线性关联实体表，打破信息孤岛。为解决系统冗余频繁报警，对自动化链路进行深度逻辑调优：</p>
         <ul>
             <li><b>触发源收敛与变量对齐：</b>精准锁定【阶段变更】为唯一有效触发源，并机制性修复普通文本与动态变量混淆的通信逻辑故障。</li>
             <li><b>业务流程自动化赋能：</b>编排系统抓取 <code>[负责人]</code> 与 <code>[金额]</code>，向指定协同群组实时推送标准结构化业务战报。</li>
         </ul>
 
-        <h3 class="sub-title">4.3 数字化交付成果：BI 销售驾驶舱大屏</h3>
+        <h3 class="sub-title">5.3 数字化交付成果：BI 销售驾驶舱大屏</h3>
         <figure class="image-container">
             <img class="zoomable-img" src="images/feishu-crm.jpg" alt="飞书多维表格数字化 CRM 销售驾驶舱" onclick="openLightbox(this)">
-            <figcaption>基于业务模型搭建的多维数字化分析看板，实现全生命周期数据的可视化流转</figcaption>
+            <figcaption>基于业务模型搭建的多维数字化分析看板</figcaption>
         </figure>
 
-        <h3 class="sub-title">4.4 全栈排障技术能力与工程素养综合梳理</h3>
-        <table>
-            <thead>
-            <tr>
-                <th style="width: 20%;">核心运维维度</th>
-                <th style="width: 40%;">传统初级表现</th>
-                <th style="width: 40%;">标准化工程实践与方法论</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td><b>应用层排障思维</b></td>
-                <td>遇到系统崩溃盲目重启应用，主观推诿猜测。</td>
-                <td>遵循全链路逆向追踪：前端 F12 抓包划分边界定责，底层利用 Wireshark 提取 pcap 报文证据。</td>
-            </tr>
-            <tr>
-                <td><b>状态码深层认知</b></td>
-                <td>盲目信任 200 OK，认为页面能打开即完全正常。</td>
-                <td>识别欺骗性假死，精准剖析 304 缓存未改动机理与 404 路由失效重写逻辑。</td>
-            </tr>
-            <tr>
-                <td><b>高危变更控制</b></td>
-                <td>在线直接调整生产环境代码，出错后依赖记忆回溯。</td>
-                <td>执行写操作或底层扩容前，强制建立物理快照与 <code>.bak</code> 副本，预留安全容错回滚通道。</td>
-            </tr>
-            </tbody>
-        </table>
+        <h3 class="sub-title">5.4 全栈排障技术能力与工程素养综合梳理</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width: 20%;">核心运维维度</th>
+                    <th style="width: 40%;">传统初级表现</th>
+                    <th style="width: 40%;">标准化工程实践与方法论</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><b>应用层排障思维</b></td>
+                    <td>遇到系统崩溃盲目重启应用，主观推诿猜测。</td>
+                    <td>遵循全链路逆向追踪：前端 F12 抓包定责，底层 Wireshark 提取报文。</td>
+                </tr>
+                <tr>
+                    <td><b>状态码深层认知</b></td>
+                    <td>盲目信任 200 OK，认为页面能打开即正常。</td>
+                    <td>精准剖析 304 缓存未改动机理与 404 路由失效重写逻辑。</td>
+                </tr>
+                <tr>
+                    <td><b>高危变更控制</b></td>
+                    <td>在线直接调整生产环境代码，依赖记忆回溯。</td>
+                    <td>执行写入或扩容前，强制建立快照与副本，预留安全回滚通道。</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </article>
 </div>
 
@@ -312,36 +395,68 @@ resize2fs /dev/sda2</code></pre>
     // 3. 监听滚轮缩放事件
     lightbox.addEventListener('wheel', function(e) {
         e.preventDefault(); // 防止网页滚动
-        // 动态计算缩放步长，让缩放感更加自然
         const zoomSensitivity = 0.15;
         if (e.deltaY < 0) {
-            scale += zoomSensitivity; // 向上滚放大
+            scale += zoomSensitivity;
         } else {
-            scale -= zoomSensitivity; // 向下滚缩小
+            scale -= zoomSensitivity;
         }
-        // 限制缩放极值：最小 0.5 倍，最大狂飙到 6 倍
         scale = Math.min(Math.max(0.5, scale), 6);
 
-        // 恢复平滑过渡动画
         lightboxImg.style.transition = "transform 0.1s ease-out";
         updateTransform();
     }, { passive: false });
 
-    // 4. 监听鼠标拖拽漫游事件
+    // 4. 移动端双指缩放及触摸拖拽支持 (Touch Events)
+    let initialDistance = null;
+    let initialScale = 1;
+
+    lightbox.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            initialDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            initialScale = scale;
+        } else if (e.touches.length === 1) {
+            isDragging = true;
+            startX = e.touches[0].clientX - pointX;
+            startY = e.touches[0].clientY - pointY;
+            lightboxImg.style.transition = "none";
+        }
+    }, { passive: false });
+
+    lightbox.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            scale = initialScale * (currentDistance / initialDistance);
+            scale = Math.min(Math.max(0.5, scale), 6);
+            lightboxImg.style.transition = "none";
+            updateTransform();
+        } else if (e.touches.length === 1 && isDragging) {
+            e.preventDefault();
+            pointX = e.touches[0].clientX - startX;
+            pointY = e.touches[0].clientY - startY;
+            updateTransform();
+        }
+    }, { passive: false });
+
+    lightbox.addEventListener('touchend', function(e) {
+        if (e.touches.length < 2) initialDistance = null;
+        if (e.touches.length === 0) isDragging = false;
+    });
+
+    // 5. 监听鼠标拖拽漫游事件 (PC端)
     lightboxImg.addEventListener('mousedown', function(e) {
         e.preventDefault();
         isDragging = true;
-        // 记录鼠标按下的起始物理坐标差
         startX = e.clientX - pointX;
         startY = e.clientY - pointY;
-        // 拖拽时取消过渡动画，实现指哪打哪的零延迟手感
         lightboxImg.style.transition = "none";
     });
 
     window.addEventListener('mousemove', function(e) {
         if (!isDragging) return;
         e.preventDefault();
-        // 实时计算新的位移坐标
         pointX = e.clientX - startX;
         pointY = e.clientY - startY;
         updateTransform();
@@ -353,14 +468,12 @@ resize2fs /dev/sda2</code></pre>
         }
     });
 
-    // 5. 点击背景边缘关闭（防止点到图片也关闭）
     lightbox.addEventListener('mousedown', function(e) {
         if (e.target === lightbox) {
             closeLightbox();
         }
     });
 
-    // 6. 监听键盘 ESC 键平滑退出
     document.addEventListener('keydown', function(event) {
         if(event.key === "Escape") {
             closeLightbox();
